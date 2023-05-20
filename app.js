@@ -71,6 +71,14 @@ app.post("/compose", function (req, res) {
 
 })
 
+//we can also import from our own files here, with relative path to the file.
+const placesRoutes = require('./routes/places-routes');
+app.use('/api/places', placesRoutes);
+
+//routers are added as middleware 
+//this allows us to move logic out of app and keep app clean and setup our routes some where else.
+//app will only forward requests to places routes if there path starts with /api/places.
+
 app.listen(5000, function () {
   console.log("Server started on port 5000");
 });
