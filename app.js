@@ -59,6 +59,8 @@ app.get("/posts/:postId", function (req, res) {
     }
   })
 });
+const userRoutes = require('./routes/users-routes');
+app.use("/api/user", userRoutes);
 
 app.post("/compose", function (req, res) {
   const newPost = new blog({

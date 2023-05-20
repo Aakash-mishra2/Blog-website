@@ -12,7 +12,9 @@ router.get('/route1', (req, res, next) => {
 const DUMMY_PLACES = [
     {
         id: 'u1',
-        value: "Here i am"
+        value: "Here i am",
+        title: 'Empoire State building',
+        description: "One of the most famous sky. "
     }
 ]
 router.get('/:pid', (req, res, next) => {
@@ -20,7 +22,7 @@ router.get('/:pid', (req, res, next) => {
     const place = DUMMY_PLACES.find(p => {
         return p.id = placeId;
     });
-    res.json({ place });
+    res.json({ place }); //auto submit.
 });
 //connection between our app.js file and the routes we are configuring here
 //we need to export our router.
