@@ -17,7 +17,6 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.use(cors());
-//database ka har ek document aisa dikhegaa
 const postSchema = {
   title: String,
   body: String
@@ -73,25 +72,15 @@ app.post("/compose", function (req, res) {
 
 })
 
-//we can also import from our own files here, with relative path to the file.
 const placesRoutes = require('./routes/places-routes');
 app.use('/api/places', placesRoutes);
-
-//routers are added as middleware 
-//this allows us to move logic out of app and keep app clean and setup our routes some where else.
-//app will only forward requests to places routes if there path starts with /api/places.
-
-
-//error handling middleware function and will executed for requests having errors thrown at end.
 app.use((error, req, res, next) => {
-  //default error handling code.
+
   if (res.headerSent) {
-    //if a response has already been sent we wont send any request on our own.
     return next(error);
   }
-  //if there is a code attatched to error if not 500 by us.
   res.status(error.code || 500)
-  res.json({ message: error.message || "An unknows error occured." });
+  res.json({ message: error.message || "An unknown error occured." });
 });
 app.listen(5000, function () {
   console.log("Server started on port 5000");
