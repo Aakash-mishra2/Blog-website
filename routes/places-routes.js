@@ -12,6 +12,7 @@ router.get('/route1', (req, res, next) => {
 const DUMMY_PLACES = [
     {
         id: 'u1',
+        user: 'sky',
         value: "Here i am",
         title: 'Empoire State building',
         description: "One of the most famous sky. "
@@ -22,7 +23,27 @@ router.get('/:pid', (req, res, next) => {
     const place = DUMMY_PLACES.find(p => {
         return p.id = placeId;
     });
+    if (!place) {
+        //adding message via json on error status.
+        //return to stop further code execution and not send blank object.
+        return res.status(404).json({ message: 'Could not find a place for the provided ID. ' })//default 200.
+    }
     res.json({ place }); //auto submit.
+});
+router.get('/user/:userId', (req, res, next) => {
+    const user = req.params.userId;
+    const userPlace = DUMMY_PLACES.find(u => {
+        return u.user = user;
+    });
+    if (!userPlace) {
+        //adding message via json on error status.
+        //return to stop further code execution and not send blank object.
+        return res
+            .status(404)
+            .json({ message: 'Could not find a place for the provided USER ID. ' })//default 200.
+    }
+    const sendingUser = { id: userPlace.id, userName: userPlace.user, title: userPlace.title };
+    res.send({ sendingUser });
 });
 //connection between our app.js file and the routes we are configuring here
 //we need to export our router.
