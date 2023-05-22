@@ -35,6 +35,27 @@ const getUserbyID = (req, res, next) => {
     }
     res.send({ userPlace });
 };
+//for post request information is in the body and data send is inside post body.
+//extracting data from the request body json object.
+const createPlace = (req, res, next) => {
+    //donot use bodyParser any where else other than app.js and change the same to json there only.
+    //do not put body Parser in places-routes.js.
+    const { title, description, user, value } = req.body;
+    console.log(title);
+    console.log(description);
+    //now create a place from this request
+    const createdPlace = {
+        title,
+        description,
+        user,
+        value
+    };
 
+    DUMMY_PLACES.push(createdPlace); //this object created from extracting info from request 
+    //can be added to DUMMY_places.
+    //unshift(createdPlace)
+    res.status(201).json({ place: createdPlace });
+}
 exports.routeByPlaces = getPlacesbyID;
 exports.routeByUsers = getUserbyID;
+exports.createPlace = createPlace;
