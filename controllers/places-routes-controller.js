@@ -2,7 +2,9 @@
 //keeps routes page clean 
 //modules.export allows one export
 //exports.<name of function pointer> = pointer to the function.
+const { update } = require('lodash');
 const HttpError = require('../models/http-errors');
+const { patch } = require('../routes/places-routes');
 const DUMMY_PLACES = [
     {
         id: 'u1',
@@ -31,31 +33,58 @@ const getUserbyID = (req, res, next) => {
         return u.user === userID;
     });
     if (!userPlace) {
-        return next(HttpError('Could not find a place for the provided user ID.', 404));
+        return next(new HttpError('Could not find a place for the provided user ID.', 404));
     }
     res.send({ userPlace });
 };
-//for post request information is in the body and data send is inside post body.
-//extracting data from the request body json object.
 const createPlace = (req, res, next) => {
-    //donot use bodyParser any where else other than app.js and change the same to json there only.
-    //do not put body Parser in places-routes.js.
-    const { title, description, user, value } = req.body;
-    console.log(title);
-    console.log(description);
-    //now create a place from this request
+    const { id, title, description, user, value } = req.body;
     const createdPlace = {
+        id,
         title,
         description,
         user,
         value
     };
 
-    DUMMY_PLACES.push(createdPlace); //this object created from extracting info from request 
-    //can be added to DUMMY_places.
-    //unshift(createdPlace)
+    DUMMY_PLACES.push(createdPlace);
+    console.log(DUMMY_PLACES);
     res.status(201).json({ place: createdPlace });
+};
+const deletePlace = (req, res, next) => {
+    const deleteID = req.params.Did;
+    const deletedPlace = DUMMY_PLACES.find(del => {
+        return del.id === deleteID;
+    });
+
+    if (!deletedPlace) {
+        const error = new HttpError("No place is present with ID = " + deleteID, 404);
+        throw error;
+    }
+    DUMMY_PLACES.filter(del => {
+        return del.id !== deleteID;
+    });
+    console.log(DUMMY_PLACES);
+
+    res.status(201).json({ place: deletedPlace });
+}
+const patchPlaces = (req, res, next) => {
+    const placeID = req.params.pID;
+    const { title, description, user, value } = req.body;
+    const patchPlace = {
+        id: placeID,
+        title,
+        description,
+        user,
+        value
+    };
+    const updateIndex = DUMMY_PLACES.findIndex((obj => obj.id === pID));
+
+    DUMMY_PLACES[updateIndex] = patchPlace;
+    res.status(201).json({ place: DUMMY_PLACES[updateIndex] });
 }
 exports.routeByPlaces = getPlacesbyID;
 exports.routeByUsers = getUserbyID;
 exports.createPlace = createPlace;
+exports.deletePlaceByID = deletePlace;
+exports.updatePlaces = patchPlaces;
