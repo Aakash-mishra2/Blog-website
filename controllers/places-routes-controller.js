@@ -7,11 +7,26 @@ const HttpError = require('../models/http-errors');
 const { patch } = require('../routes/places-routes');
 let DUMMY_PLACES = [
     {
-        id: 'u1',
-        user: 'sky',
-        value: "Here i am",
-        title: 'Empoire State building',
-        description: "One of the most famous sky. "
+        id: 'p1',
+        title: 'Qutub Minar monument.',
+        description: "One of the tallest monument in India.",
+        location: {
+            city: "Delhi",
+            metro_station: "Qutub Minar",
+        },
+        address: "Seth Sarai, Mehrauli, New Delhi, Delhi 110016",
+        creator: 'u1'
+    },
+    {
+        id: 'p2',
+        title: 'Statue of Unity',
+        description: "Tallest in the world. ",
+        location: {
+            city: "Sardar sarovar Dam",
+            metro_station: "SOLITONS",
+        },
+        address: "Statue of Unity Rd, Kevadia, Gujarat 393155",
+        creator: 'u1'
     }
 ]
 
@@ -27,15 +42,15 @@ const getPlacesbyID = (req, res, next) => {
     res.json({ place });
 };
 
-const getUserbyID = (req, res, next) => {
+const getPlacesByUserID = (req, res, next) => {
     const userID = req.params.userId;
-    const userPlace = DUMMY_PLACES.find(u => {
-        return u.user === userID;
+    const userPlaces = DUMMY_PLACES.filter(u => {
+        return u.creator === userID;
     });
-    if (!userPlace) {
-        return next(new HttpError('Could not find a place for the provided user ID.', 404));
+    if (!userPlaces || userPlaces.length === 0) {
+        return next(new HttpError('Could not places for the provided user ID.', 404));
     }
-    res.send({ userPlace });
+    res.send({ userPlaces });
 };
 const createPlace = (req, res, next) => {
     const { id, title, description, user, value } = req.body;
@@ -73,7 +88,7 @@ const updatePlaces = (req, res, next) => {
     res.status(200).json({ place: updatedPlace });
 }
 exports.routeByPlaces = getPlacesbyID;
-exports.routeByUsers = getUserbyID;
+exports.routeByUsers = getPlacesByUserID;
 exports.createPlace = createPlace;
 exports.deletePlaceByID = deletePlace;
 exports.updatePlaces = updatePlaces;

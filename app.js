@@ -58,8 +58,6 @@ app.get("/posts/:postId", function (req, res) {
     }
   })
 });
-const userRoutes = require('./routes/users-routes');
-app.use("/api/user", userRoutes);
 
 app.post("/compose", function (req, res) {
   const newPost = new blog({
@@ -73,11 +71,10 @@ app.post("/compose", function (req, res) {
 })
 
 const placesRoutes = require('./routes/places-routes');
+const userRoutes = require('./routes/users-routes');
 const HttpError = require("./models/http-errors");
 app.use('/api/places', placesRoutes);
-
-//error handling middleware for no routes , only triggered at all the requests and runs only 
-//when we sending no response from above middleware. That can only be a request we do not support. 
+app.use('/api/users', userRoutes);
 
 app.use((req, res, next) => {
   const error = new HttpError("We do not support this route yet.", 404);
