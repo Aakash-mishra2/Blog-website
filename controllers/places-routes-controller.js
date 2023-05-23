@@ -5,7 +5,7 @@
 const { update } = require('lodash');
 const HttpError = require('../models/http-errors');
 const { patch } = require('../routes/places-routes');
-const DUMMY_PLACES = [
+let DUMMY_PLACES = [
     {
         id: 'u1',
         user: 'sky',
@@ -52,39 +52,28 @@ const createPlace = (req, res, next) => {
     res.status(201).json({ place: createdPlace });
 };
 const deletePlace = (req, res, next) => {
-    const deleteID = req.params.Did;
-    const deletedPlace = DUMMY_PLACES.find(del => {
-        return del.id === deleteID;
-    });
-
-    if (!deletedPlace) {
-        const error = new HttpError("No place is present with ID = " + deleteID, 404);
-        throw error;
-    }
-    DUMMY_PLACES.filter(del => {
-        return del.id !== deleteID;
-    });
+    const deleteID = req.params.dID;
+    //filter runs on every item on the array and if we return true in the function we keep that 
+    //item in newly returned array. If we return false we drop it from newly returned array. 
+    DUMMY_PLACES = DUMMY_PLACES.filter((del => del.id != deleteID));
     console.log(DUMMY_PLACES);
 
-    res.status(201).json({ place: deletedPlace });
+    res.status(201).json({ message: 'Deleted Place. ' });
 }
-const patchPlaces = (req, res, next) => {
+const updatePlaces = (req, res, next) => {
     const placeID = req.params.pID;
-    const { title, description, user, value } = req.body;
-    const patchPlace = {
-        id: placeID,
-        title,
-        description,
-        user,
-        value
-    };
-    const updateIndex = DUMMY_PLACES.findIndex((obj => obj.id === pID));
-
-    DUMMY_PLACES[updateIndex] = patchPlace;
-    res.status(201).json({ place: DUMMY_PLACES[updateIndex] });
+    const { title, description } = req.body;
+    const updatedPlace = { ...DUMMY_PLACES.find(p => p.id === placeID) };
+    const placeIndex = DUMMY_PLACES.findIndex(p => p.id === placeID);
+    updatedPlace.title = title;
+    updatedPlace.description = description;
+    //objects are by reference in javascript. So not change directly.
+    //make a copy update it then change object.
+    DUMMY_PLACES[placeIndex] = updatedPlace;
+    res.status(200).json({ place: updatedPlace });
 }
 exports.routeByPlaces = getPlacesbyID;
 exports.routeByUsers = getUserbyID;
 exports.createPlace = createPlace;
 exports.deletePlaceByID = deletePlace;
-exports.updatePlaces = patchPlaces;
+exports.updatePlaces = updatePlaces;
