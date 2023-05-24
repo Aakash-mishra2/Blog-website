@@ -5,6 +5,8 @@
 const { update } = require('lodash');
 const HttpError = require('../models/http-errors');
 const { patch } = require('../routes/places-routes');
+const { validationResult } = require('express-validator');
+
 let DUMMY_PLACES = [
     {
         id: 'p1',
@@ -53,13 +55,22 @@ const getPlacesByUserID = (req, res, next) => {
     res.send({ userPlaces });
 };
 const createPlace = (req, res, next) => {
-    const { id, title, description, user, value } = req.body;
+    //will check the request body and see if there is any validation errors based on your 
+    //configured middleware in the express method in places routes file.
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        //means we do have errors. now handle it.
+        console.log(errors);
+        throw new HttpError('Invalid inputs passed, please check your data.', 422);
+    }
+
+    const { id, title, description, address, location, creator } = req.body;
     const createdPlace = {
         id,
         title,
         description,
-        user,
-        value
+        location,
+        creator
     };
 
     DUMMY_PLACES.push(createdPlace);

@@ -14,7 +14,6 @@ let DUMMY_USERS = [
         name: "Prakash"
     }
 ];
-
 const getUser = (req, res, next) => {
     const usID = req.params.userID;
 
@@ -40,7 +39,6 @@ const createUser = (req, res, next) => {
     console.log(DUMMY_USERS);
     res.status(200).json({ message: "created Account and logged in. " });
 }
-
 const loginUser = (req, res, next) => {
     const userID = req.body;
     const account = DUMMY_USERS.find((acc => acc.id === userID.id));
