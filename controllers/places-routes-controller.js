@@ -34,27 +34,54 @@ let DUMMY_PLACES = [
 ]
 
 
-const getPlacesbyID = (req, res, next) => {
+const getPlacesbyID = async (req, res, next) => {
     const placeId = req.params.pid;
-    const place = DUMMY_PLACES.find(p => {
-        return p.id === placeId;
-    });
-    if (!place) {
-        throw new HttpError('Could not find a place for the provided ID.', 404);
+    //findById is a static method means not used on instance of place but directly on place constructor
+    //function. contrast to save does not return a promise. call exec() after findById() to get a promise.  
+    //have to define place out of try block scope. 
+    let place;
+    try {
+        place = await Place.findById(placeId);
+
+    } catch (err) {
+        //this error should be thrown in case database has no file.
+        const error = new HttpError(
+            'Something went wrong, could not find a place.', 500
+        );
+        return next(error);
     }
-    res.json({ place });
+    //this error should be thrown in case of wrong ID in request body.
+    if (!place) {
+        const error = new HttpError('Could not find a place for the provided ID.', 404);
+        return next(error);
+    }
+    //a database mongoose object to normal javascript object.
+    //when we get back the response, the object will be easy to use if we just turn it into 
+    //the normal javascript object.
+    //returned object will have two id attributes with and without underscore.
+    res.json({ place: place.toObject({ getters: true }) });
 };
 
-const getPlacesByUserID = (req, res, next) => {
+const getPlacesByUserID = async (req, res, next) => {
     const userID = req.params.userId;
-    const userPlaces = DUMMY_PLACES.filter(u => {
-        return u.creator === userID;
-    });
-    if (!userPlaces || userPlaces.length === 0) {
-        return next(new HttpError('Could not places for the provided user ID.', 404));
+    let userPlaces;
+    try {
+        //find returns an array here thus can't use toObject.
+        userPlaces = await Place.find({ creator: userID });
+    } catch (err) {
+        const error = new HttpError(
+            'Something went wrong, could not find a place.', 500
+        );
+        return next(error);
     }
-    res.send({ userPlaces });
+    if (!userPlaces || userPlaces.length === 0) {
+        const error = new HttpError('Could not places for the provided user ID.', 404)
+        return next(error);
+    }
+    res.json({ userPlaces: userPlaces.map(place => place.toObject({ getters: true })) });
 };
+
+
 const createPlace = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
