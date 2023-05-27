@@ -6,6 +6,7 @@ const { update } = require('lodash');
 const HttpError = require('../models/http-errors');
 const { patch } = require('../routes/places-routes');
 const { validationResult } = require('express-validator');
+const Place = require('../models/places');
 
 let DUMMY_PLACES = [
     {
@@ -54,7 +55,7 @@ const getPlacesByUserID = (req, res, next) => {
     }
     res.send({ userPlaces });
 };
-const createPlace = (req, res, next) => {
+const createPlace = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         //means we do have errors. now handle it.
@@ -63,16 +64,25 @@ const createPlace = (req, res, next) => {
     }
 
     const { id, title, description, address, location, creator } = req.body;
-    const createdPlace = {
-        id,
+    const createdPlace = new Place({
         title,
         description,
+        address,
         location,
+        image: 'https://www.shorturl.at/img/shorturl-icon.png',
         creator
-    };
+    });
+    //save is a promise thus asynchronous 
+    try {
+        await createdPlace.save();
+    } catch (err) {
+        const error = new HttpError(
+            'Creating place failed, please try again.',
+            500
+        );
+        return next(error);
+    }
 
-    DUMMY_PLACES.push(createdPlace);
-    console.log(DUMMY_PLACES);
     res.status(201).json({ place: createdPlace });
 };
 const deletePlace = (req, res, next) => {
