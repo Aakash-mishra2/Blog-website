@@ -122,7 +122,7 @@ const deletePlace = (req, res, next) => {
 
     res.status(201).json({ message: 'Deleted Place. ' });
 }
-const updatePlaces = (req, res, next) => {
+const updatePlaces = async (req, res, next) => {
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -131,14 +131,28 @@ const updatePlaces = (req, res, next) => {
         throw new HttpError('Invalid inputs passed, please check your data.', 422);
     }
 
+    const { title, description, image } = req.body;
     const placeID = req.params.pID;
-    const { title, description } = req.body;
-    const updatedPlace = { ...DUMMY_PLACES.find(p => p.id === placeID) };
-    const placeIndex = DUMMY_PLACES.findIndex(p => p.id === placeID);
-    updatedPlace.title = title;
-    updatedPlace.description = description;
-    DUMMY_PLACES[placeIndex] = updatedPlace;
-    res.status(200).json({ place: DUMMY_PLACES[placeIndex] });
+
+    let place;
+    try {
+        place = await Place.findById(placeID);
+    } catch (err) {
+        const error = new HttpError('Something went wrong, could not find place. ', 500);
+        return next(error);
+    }
+
+    place.title = title;
+    place.description = description;
+    place.image = image;
+
+    try {
+        await place.save();
+    } catch (err) {
+        const error = new HttpError('Something went wrong, could not update place. ', 500);
+        return next(error);
+    }
+    res.status(200).json({ place: place.toObject({ getters: true }) });
 }
 exports.routeByPlaces = getPlacesbyID;
 exports.routeByUsers = getPlacesByUserID;
