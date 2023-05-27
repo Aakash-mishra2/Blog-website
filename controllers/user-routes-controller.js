@@ -1,17 +1,23 @@
 const HttpError = require("../models/http-errors");
-
+const { validationResult } = require("express-validator");
 let DUMMY_USERS = [
     {
         id: "34",
-        name: "Aakash "
+        name: "Aakash ",
+        email: "aakash@aak.com",
+        password: "aak"
     },
     {
         id: "456",
-        name: "Harshit"
+        name: "Harshit",
+        email: "aakash@aak.com",
+        password: "aak"
     },
     {
         id: "32",
-        name: "Prakash"
+        name: "Prakash",
+        email: "aakash@aak.com",
+        password: "aak"
     }
 ];
 const getUser = (req, res, next) => {
@@ -26,10 +32,20 @@ const getUser = (req, res, next) => {
     res.send({ users });
 }
 const createUser = (req, res, next) => {
-    const { id, name } = req.body;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        //means we do have errors. now handle it.
+        console.log(errors);
+        throw new HttpError('Could not identify User', 422);
+    }
+
+
+    const { id, name, email, password } = req.body;
     const newUser = {
         id,
-        name
+        name,
+        email,
+        password
     }
     if (!newUser) {
         const error = new HttpError(" could not create new account. So", 404);

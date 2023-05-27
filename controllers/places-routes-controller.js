@@ -55,8 +55,6 @@ const getPlacesByUserID = (req, res, next) => {
     res.send({ userPlaces });
 };
 const createPlace = (req, res, next) => {
-    //will check the request body and see if there is any validation errors based on your 
-    //configured middleware in the express method in places routes file.
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         //means we do have errors. now handle it.
@@ -79,24 +77,31 @@ const createPlace = (req, res, next) => {
 };
 const deletePlace = (req, res, next) => {
     const deleteID = req.params.dID;
-    //filter runs on every item on the array and if we return true in the function we keep that 
-    //item in newly returned array. If we return false we drop it from newly returned array. 
+    if (!DUMMY_PLACES.find(delID => delID === deleteID)) {
+        throw new HttpError("Could not find a place for that id.", 404);
+    }
     DUMMY_PLACES = DUMMY_PLACES.filter((del => del.id != deleteID));
     console.log(DUMMY_PLACES);
 
     res.status(201).json({ message: 'Deleted Place. ' });
 }
 const updatePlaces = (req, res, next) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        //means we do have errors. now handle it.
+        console.log(errors);
+        throw new HttpError('Invalid inputs passed, please check your data.', 422);
+    }
+
     const placeID = req.params.pID;
     const { title, description } = req.body;
     const updatedPlace = { ...DUMMY_PLACES.find(p => p.id === placeID) };
     const placeIndex = DUMMY_PLACES.findIndex(p => p.id === placeID);
     updatedPlace.title = title;
     updatedPlace.description = description;
-    //objects are by reference in javascript. So not change directly.
-    //make a copy update it then change object.
     DUMMY_PLACES[placeIndex] = updatedPlace;
-    res.status(200).json({ place: updatedPlace });
+    res.status(200).json({ place: DUMMY_PLACES[placeIndex] });
 }
 exports.routeByPlaces = getPlacesbyID;
 exports.routeByUsers = getPlacesByUserID;

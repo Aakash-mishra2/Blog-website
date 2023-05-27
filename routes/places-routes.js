@@ -32,5 +32,10 @@ router.post(
 //for example .not().isEmpty() = title is not empty = method.
 
 router.delete('/:dID', placesControllers.deletePlaceByID);
-router.patch('/:pID', placesControllers.updatePlaces);
+router.patch('/:pID',
+    [
+        check('title').not().isEmpty(),
+        check('description').isLength({ min: 5 }),
+    ]
+    , placesControllers.updatePlaces);
 module.exports = router;
