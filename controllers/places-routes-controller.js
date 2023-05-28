@@ -6,32 +6,6 @@ const { validationResult } = require('express-validator');
 const Place = require('../models/places');
 const User = require('../models/users');
 
-let DUMMY_PLACES = [
-    {
-        id: 'p1',
-        title: 'Qutub Minar monument.',
-        description: "One of the tallest monument in India.",
-        location: {
-            city: "Delhi",
-            metro_station: "Qutub Minar",
-        },
-        address: "Seth Sarai, Mehrauli, New Delhi, Delhi 110016",
-        creator: 'u1'
-    },
-    {
-        id: 'p2',
-        title: 'Statue of Unity',
-        description: "Tallest in the world. ",
-        location: {
-            city: "Sardar sarovar Dam",
-            metro_station: "SOLITONS",
-        },
-        address: "Statue of Unity Rd, Kevadia, Gujarat 393155",
-        creator: 'u1'
-    }
-]
-
-
 const getPlacesbyID = async (req, res, next) => {
     const placeId = req.params.pid;
     let place;
@@ -43,19 +17,16 @@ const getPlacesbyID = async (req, res, next) => {
             'Something went wrong, could not find a place.', 500);
         return next(error);
     }
-    //this error should be thrown in case of wrong ID in request body.
     if (!place) {
         const error = new HttpError('Could not find a place for the provided ID.', 404);
         return next(error);
     }
     res.json({ place: place.toObject({ getters: true }) });
 };
-
 const getPlacesByUserID = async (req, res, next) => {
     const userID = req.params.userId;
     let userWithPlaces;
     try {
-        //find returns an array here thus can't use toObject.
         userWithPlaces = await User.findById(userID).populate('places');
     } catch (err) {
         const error = new HttpError('Something went wrong, could not find a place.', 500);
@@ -67,7 +38,6 @@ const getPlacesByUserID = async (req, res, next) => {
     }
     res.json({ userPlaces: userWithPlaces.places.map(place => place.toObject({ getters: true })) });
 };
-
 //throw error cannot be used we are inside a asynchronous task.
 const createPlace = async (req, res, next) => {
     const errors = validationResult(req);
@@ -103,10 +73,6 @@ const createPlace = async (req, res, next) => {
         return next(error);
     }
     console.log(user);
-    //creating a place + //storing the id of our places in user document 
-    //if one of these operations fails, we need to undo all operation of changing documents .
-    //for that we use transactions: perform multiple operations independent of each other.
-    //tsxn are built on sessions: first start session then initiate txn and terminate opp order.
 
     try {
         const sess = await mongoose.startSession();
@@ -118,7 +84,6 @@ const createPlace = async (req, res, next) => {
         //now part 2 store place make sure placeID is added to user.
         user.places.push(createdPlace);
         await user.save({ session: sess });
-
         //at this point changes are saved in database for real and if any task wrong all steps 
         //rollback.
         await sess.commitTransaction();
@@ -140,12 +105,9 @@ const deletePlace = async (req, res, next) => {
     let deletePlace;
     try {
         deletePlace = await Place.findById(deleteID).populate('creator');
-
         //populate : to refer to a document stored in different collection and to refer to 
         //a document stored in that different collection.
         //relations set up between two collections then only popualate can be used.
-
-
     } catch (err) {
         const error = new HttpError(' Could not find your place. Please retry. ');
         return next(error);
@@ -188,7 +150,7 @@ const updatePlaces = async (req, res, next) => {
         const error = new HttpError('Something went wrong, could not find place. ', 500);
         return next(error);
     }
-
+    //modify requested object now.
     place.title = title;
     place.description = description;
     place.image = image;

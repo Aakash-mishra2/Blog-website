@@ -1,9 +1,6 @@
 const express = require('express');
 const router = express.Router();
-//validator imported with object destructuring , not the ususal way
 const { check } = require('express-validator');
-//check is a method which can be executed as a new middleware configured to our validation requirements
-
 
 const placesControllers = require('../controllers/places-routes-controller');
 
@@ -14,7 +11,7 @@ router.get('/user/:userId', placesControllers.routeByUsers);
 router.post(
     '/',
     [
-        //registering validation middleware alone will not return errors.
+        //just registering validation middleware alone will not return errors.
         check('title')
             .not()
             .isEmpty(),
