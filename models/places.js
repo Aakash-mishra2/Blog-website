@@ -12,6 +12,8 @@ const placeSchema = new Schema({
         city: { type: Number, required: true },
         metro_station: { type: Number, required: true }
     },
-    creator: { type: String, required: true }
+    //we have to tell creator is mongoose type object not javascript
+    //ref : reference to conection with other schema.
+    creator: { type: mongoose.Types.ObjectId, required: true, ref: 'User' }
 });
 module.exports = mongoose.model('Place', placeSchema);

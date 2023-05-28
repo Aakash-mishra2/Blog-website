@@ -38,7 +38,7 @@ const getUser = async (req, res, next) => {
 }
 const createUser = async (req, res, next) => {
     //checked if the user exists.
-    const { name, email, password, places } = req.body;
+    const { name, email, password } = req.body;
     let existingUser;
     try {
         existingUser = await User.findOne({ email: email });
@@ -54,12 +54,13 @@ const createUser = async (req, res, next) => {
         return next(error);
     }
     //password must be encrypted at some later stage.
+    //places will automatically be added so also remove places from above req body fetch command.
     const createdUser = new User({
         name,
         email,
         image: 'https://---.com',
         password,
-        places
+        places: []
     });
 
     try {
