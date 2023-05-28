@@ -1,5 +1,7 @@
 const HttpError = require("../models/http-errors");
 const { validationResult } = require("express-validator");
+const User = require('../models/users');
+const users = require("../models/users");
 let DUMMY_USERS = [
     {
         id: "34",
@@ -10,60 +12,87 @@ let DUMMY_USERS = [
     {
         id: "456",
         name: "Harshit",
-        email: "aakash@aak.com",
+        email: "raja@aak.com",
         password: "aak"
     },
     {
         id: "32",
         name: "Prakash",
-        email: "aakash@aak.com",
+        email: "badm@aak.com",
         password: "aak"
     }
 ];
-const getUser = (req, res, next) => {
+const getUser = async (req, res, next) => {
     const usID = req.params.userID;
-
-    const users = DUMMY_USERS.find(u => {
-        return u.id === usID;
-    });
+    let users;
+    try {
+        users = await User.findById(usID);
+    } catch (err) {
+        const error = new HttpError(' Could not get users. ', 400);
+        return next(error);
+    }
     if (!users) {
-        throw new HttpError('Could not find a user for the provided ID.' + usID, 404);
+        return next(new HttpError('Could not find a user for the provided ID.' + usID, 404));
     }
-    res.send({ users });
+    res.status(200).json({ users: users.toObject({ getters: true }) });
 }
-const createUser = (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        //means we do have errors. now handle it.
-        console.log(errors);
-        throw new HttpError('Could not identify User', 422);
+const createUser = async (req, res, next) => {
+    //checked if the user exists.
+    const { name, email, password, places } = req.body;
+    let existingUser;
+    try {
+        existingUser = await User.findOne({ email: email });
+    } catch (err) {
+        const error = new HttpError(
+            'Signing up failed please try again later. ', 500
+        );
+        return next(error);
     }
 
-
-    const { id, name, email, password } = req.body;
-    const newUser = {
-        id,
+    if (existingUser) {
+        const error = new HttpError('signup failed, user exists already, please login instead.', 433);
+        return next(error);
+    }
+    //password must be encrypted at some later stage.
+    const createdUser = new User({
         name,
         email,
-        password
-    }
-    if (!newUser) {
-        const error = new HttpError(" could not create new account. So", 404);
-        throw error;
-    }
-    DUMMY_USERS.push(newUser);
-    console.log(DUMMY_USERS);
-    res.status(200).json({ message: "created Account and logged in. " });
-}
-const loginUser = (req, res, next) => {
-    const userID = req.body;
-    const account = DUMMY_USERS.find((acc => acc.id === userID.id));
+        image: 'https://---.com',
+        password,
+        places
+    });
 
-    if (!account) {
-        const error = new HttpError("No account exists with this ID. Signup to create new Account.", 404);
-        throw error;
+    try {
+        await createdUser.save();
+    } catch (err) {
+        const error = new HttpError(
+            'Signing up failed, please try again.',
+            500
+        );
+        return next(error);
     }
-    res.status(200).json({ welcome: account.name });
+    res.status(200).json({ user: createdUser.toObject({ getters: true }) });
+}
+const loginUser = async (req, res, next) => {
+    const { email, password } = req.body;
+    let existingUser;
+    try {
+        existingUser = await User.findOne({ email: email });
+    } catch (err) {
+        const error = new HttpError(
+            'Login up failed please try again later. ', 500
+        );
+        return next(error);
+    }
+    //if existing user not stored in database or if existing user password is not equal to entered 
+    //password.
+    if (!existingUser || existingUser.password !== password) {
+        const error = new HttpError(
+            'Invalid credentials, could not log you in.', 401
+        );
+        return next(error);
+    }
+    res.json({ message: 'Logged in!.' });
 }
 exports.getUserByID = getUser;
 exports.createUser = createUser;

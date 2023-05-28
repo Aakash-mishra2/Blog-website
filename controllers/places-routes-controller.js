@@ -81,13 +81,13 @@ const getPlacesByUserID = async (req, res, next) => {
     res.json({ userPlaces: userPlaces.map(place => place.toObject({ getters: true })) });
 };
 
-
+//throw error cannot be used we are inside a asynchronous task.
 const createPlace = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         //means we do have errors. now handle it.
-        console.log(errors);
-        throw new HttpError('Invalid inputs passed, please check your data.', 422);
+        const error = new HttpError('Invalid inputs passed, please check your data.', 422);
+        return next(error);
     }
 
     const { id, title, description, address, location, creator } = req.body;
