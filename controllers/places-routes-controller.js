@@ -65,18 +65,18 @@ const getPlacesByUserID = async (req, res, next) => {
     let userPlaces;
     try {
         //find returns an array here thus can't use toObject.
-        userPlaces = await Place.find({ creator: userID });
+        userWithPlaces = await User.findById(userID).populate('places');
     } catch (err) {
         const error = new HttpError(
             'Something went wrong, could not find a place.', 500
         );
         return next(error);
     }
-    if (!userPlaces || userPlaces.length === 0) {
+    if (!userwithPlaces || userwithPlaces.length === 0) {
         const error = new HttpError('Could not places for the provided user ID.', 404)
         return next(error);
     }
-    res.json({ userPlaces: userPlaces.map(place => place.toObject({ getters: true })) });
+    res.json({ userPlaces: userwithPlaces.places.map(place => place.toObject({ getters: true })) });
 };
 
 //throw error cannot be used we are inside a asynchronous task.
@@ -134,7 +134,7 @@ const createPlace = async (req, res, next) => {
         //rollback.
         await sess.commitTransaction();
         //for places if we donot have places collection it will not be automatically created.
-
+        sess.endSession();
     } catch (err) {
         //either database server is down or database validation fails.
         const error = new HttpError(
@@ -150,13 +150,30 @@ const deletePlace = async (req, res, next) => {
     const deleteID = req.params.dID;
     let deletePlace;
     try {
-        deletePlace = await Place.findById(deleteID);
+        deletePlace = await Place.findById(deleteID).populate('creator');
+
+        //populate : to refer to a document stored in different collection and to refer to 
+        //a document stored in that different collection.
+        //relations set up between two collections then only popualate can be used.
+
+
     } catch (err) {
         const error = new HttpError(' Could not find your place. Please retry. ');
         return next(error);
     }
+    if (!place) {
+        const error = new HttpError('could not find place for this ID', 404);
+        return next(error);
+    }
+
     try {
-        await deletePlace.remove();
+        const sess2 = await mongoose.startSession();
+        sess2.startTransaction();
+        await deletePlace.remove({ session: sess2 });
+        deletePlace.creator.places.pull(deletePlace);
+        await deletePlace.creator.save({ session: sess2 });
+        (await sess2).commitTransaction();
+        sess2.endSession();
     } catch (err) {
         const error = new HttpError(' Something went wrong, could not delete place. ', 500);
         return next(error);
