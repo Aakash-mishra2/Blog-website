@@ -1,12 +1,10 @@
-//keeping filter string same way move callback functions to controllers 
-//keeps routes page clean 
-//modules.export allows one export
-//exports.<name of function pointer> = pointer to the function.
-const { update } = require('lodash');
 const HttpError = require('../models/http-errors');
+const mongoose = require('mongoose');
+mongoose.set('strictQuery', true);
 const { patch } = require('../routes/places-routes');
 const { validationResult } = require('express-validator');
 const Place = require('../models/places');
+const User = require('../models/users');
 
 let DUMMY_PLACES = [
     {
@@ -89,7 +87,7 @@ const createPlace = async (req, res, next) => {
         const error = new HttpError('Invalid inputs passed, please check your data.', 422);
         return next(error);
     }
-
+    //fields of db document.
     const { id, title, description, address, location, creator } = req.body;
     const createdPlace = new Place({
         title,
@@ -99,12 +97,48 @@ const createPlace = async (req, res, next) => {
         image: 'https://www.shorturl.at/img/shorturl-icon.png',
         creator
     });
-    //save is a promise thus asynchronous 
+    console.log(createdPlace);
+    let user;
     try {
-        await createdPlace.save();
+        user = await User.findById(creator);
     } catch (err) {
         const error = new HttpError(
             'Creating place failed, please try again.',
+            500
+        );
+        return next(error);
+    }
+
+    if (!user) {
+        const error = new HttpError("Could not find user for provided ID. ", 404);
+        return next(error);
+    }
+    console.log(user);
+    //creating a place + //storing the id of our places in user document 
+    //if one of these operations fails, we need to undo all operation of changing documents .
+    //for that we use transactions: perform multiple operations independent of each other.
+    //tsxn are built on sessions: first start session then initiate txn and terminate opp order.
+
+    try {
+        const sess = await mongoose.startSession();
+        sess.startTransaction();
+        //now tell mongoose what we want to do here.
+        await createdPlace.save({ session: sess });
+        //will auto create unique id for our place.
+
+        //now part 2 store place make sure placeID is added to user.
+        user.places.push(createdPlace);
+        await user.save({ session: sess });
+
+        //at this point changes are saved in database for real and if any task wrong all steps 
+        //rollback.
+        await sess.commitTransaction();
+        //for places if we donot have places collection it will not be automatically created.
+
+    } catch (err) {
+        //either database server is down or database validation fails.
+        const error = new HttpError(
+            'Creating place failed session , please try again.',
             500
         );
         return next(error);
