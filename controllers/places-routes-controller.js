@@ -34,18 +34,13 @@ let DUMMY_PLACES = [
 
 const getPlacesbyID = async (req, res, next) => {
     const placeId = req.params.pid;
-    //findById is a static method means not used on instance of place but directly on place constructor
-    //function. contrast to save does not return a promise. call exec() after findById() to get a promise.  
-    //have to define place out of try block scope. 
     let place;
     try {
         place = await Place.findById(placeId);
 
     } catch (err) {
-        //this error should be thrown in case database has no file.
         const error = new HttpError(
-            'Something went wrong, could not find a place.', 500
-        );
+            'Something went wrong, could not find a place.', 500);
         return next(error);
     }
     //this error should be thrown in case of wrong ID in request body.
@@ -53,30 +48,24 @@ const getPlacesbyID = async (req, res, next) => {
         const error = new HttpError('Could not find a place for the provided ID.', 404);
         return next(error);
     }
-    //a database mongoose object to normal javascript object.
-    //when we get back the response, the object will be easy to use if we just turn it into 
-    //the normal javascript object.
-    //returned object will have two id attributes with and without underscore.
     res.json({ place: place.toObject({ getters: true }) });
 };
 
 const getPlacesByUserID = async (req, res, next) => {
     const userID = req.params.userId;
-    let userPlaces;
+    let userWithPlaces;
     try {
         //find returns an array here thus can't use toObject.
         userWithPlaces = await User.findById(userID).populate('places');
     } catch (err) {
-        const error = new HttpError(
-            'Something went wrong, could not find a place.', 500
-        );
+        const error = new HttpError('Something went wrong, could not find a place.', 500);
         return next(error);
     }
-    if (!userwithPlaces || userwithPlaces.length === 0) {
+    if (!userWithPlaces || userWithPlaces.length === 0) {
         const error = new HttpError('Could not places for the provided user ID.', 404)
         return next(error);
     }
-    res.json({ userPlaces: userwithPlaces.places.map(place => place.toObject({ getters: true })) });
+    res.json({ userPlaces: userWithPlaces.places.map(place => place.toObject({ getters: true })) });
 };
 
 //throw error cannot be used we are inside a asynchronous task.
@@ -161,7 +150,7 @@ const deletePlace = async (req, res, next) => {
         const error = new HttpError(' Could not find your place. Please retry. ');
         return next(error);
     }
-    if (!place) {
+    if (!deletePlace) {
         const error = new HttpError('could not find place for this ID', 404);
         return next(error);
     }
@@ -172,13 +161,13 @@ const deletePlace = async (req, res, next) => {
         await deletePlace.remove({ session: sess2 });
         deletePlace.creator.places.pull(deletePlace);
         await deletePlace.creator.save({ session: sess2 });
-        (await sess2).commitTransaction();
+        await sess2.commitTransaction();
         sess2.endSession();
     } catch (err) {
         const error = new HttpError(' Something went wrong, could not delete place. ', 500);
         return next(error);
     }
-    res.status(201).json({ message: 'Deleted Place. ' });
+    res.status(201).json({ message: 'Deleted Place.' });
 }
 const updatePlaces = async (req, res, next) => {
 
