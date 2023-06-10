@@ -1,8 +1,22 @@
 const HttpError = require("../models/http-errors");
 const { validationResult } = require("express-validator");
 const User = require('../models/users');
-const users = require("../models/users");
+
 const getUser = async (req, res, next) => {
+    let allUsers;
+    try {
+        allUsers = await User.find();
+    } catch (err) {
+        const error = new HttpError(' Could not get all users. ', 400);
+        return next(error);
+    }
+    if (!allUsers) {
+        return next(new HttpError('Could not find any users. ', 400));
+    }
+    res.status(200).json({ users: allUsers.toObject({ getters: true }) });
+}
+
+const getUserbyID = async (req, res, next) => {
     const usID = req.params.userID;
     let users;
     try {
@@ -75,6 +89,6 @@ const loginUser = async (req, res, next) => {
     }
     res.json({ message: 'Logged in!.' });
 }
-exports.getUserByID = getUser;
+exports.getUserByID = getUserbyID;
 exports.createUser = createUser;
 exports.logUser = loginUser;
