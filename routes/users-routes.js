@@ -3,7 +3,8 @@ const router = express.Router();
 const { check } = require('express-validator');
 
 const userController = require('../controllers/user-routes-controller');
-router.get('/:userID', userController.getUserByID);
+router.get('/', userController.allUser);
+router.get('/single/:userID', userController.getUserByID);
 router.post('/signup',
     [
         check('name').not().isEmpty(),

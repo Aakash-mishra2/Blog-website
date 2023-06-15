@@ -13,9 +13,8 @@ const getUser = async (req, res, next) => {
     if (!allUsers) {
         return next(new HttpError('Could not find any users. ', 400));
     }
-    res.status(200).json({ users: allUsers.toObject({ getters: true }) });
+    res.status(200).json({ users: allUsers.map(user => user.toObject({ getters: true })) });
 }
-
 const getUserbyID = async (req, res, next) => {
     const usID = req.params.userID;
     let users;
@@ -44,7 +43,7 @@ const createUser = async (req, res, next) => {
     }
 
     if (existingUser) {
-        const error = new HttpError('signup failed, user exists already, please login instead.', 433);
+        const error = new HttpError('Signup failed, user exists already, please login instead.', 401);
         return next(error);
     }
     //password must be encrypted at some later stage.
@@ -87,8 +86,12 @@ const loginUser = async (req, res, next) => {
         );
         return next(error);
     }
-    res.json({ message: 'Logged in!.' });
+    res.json({
+        message: 'Logged in!.',
+        user: existingUser.toObject({ getters: true })
+    });
 }
+exports.allUser = getUser;
 exports.getUserByID = getUserbyID;
 exports.createUser = createUser;
 exports.logUser = loginUser;

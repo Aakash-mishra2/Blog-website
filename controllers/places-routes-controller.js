@@ -1,7 +1,7 @@
 const HttpError = require('../models/http-errors');
 const mongoose = require('mongoose');
 mongoose.set('strictQuery', true);
-const { patch } = require('../routes/places-routes');
+
 const { validationResult } = require('express-validator');
 const Place = require('../models/places');
 const User = require('../models/users');
@@ -72,33 +72,21 @@ const createPlace = async (req, res, next) => {
         const error = new HttpError("Could not find user for provided ID. ", 404);
         return next(error);
     }
-    console.log(user);
-
+    let sess;
     try {
-        const sess = await mongoose.startSession();
+        sess = await mongoose.startSession();
         sess.startTransaction();
-        //now tell mongoose what we want to do here.
         await createdPlace.save({ session: sess });
-        //will auto create unique id for our place.
-
-        //now part 2 store place make sure placeID is added to user.
         user.places.push(createdPlace);
         await user.save({ session: sess });
-        //at this point changes are saved in database for real and if any task wrong all steps 
-        //rollback.
         await sess.commitTransaction();
-        //for places if we donot have places collection it will not be automatically created.
         sess.endSession();
     } catch (err) {
-        //either database server is down or database validation fails.
-        const error = new HttpError(
-            'Creating place failed session , please try again.',
-            500
-        );
+        const error = new HttpError(" Creating place session failed , please try again.", 500);
         return next(error);
     }
 
-    res.status(201).json({ place: createdPlace });
+    res.status(200).json({ place: createdPlace });
 };
 const deletePlace = async (req, res, next) => {
     const deleteID = req.params.dID;

@@ -1,5 +1,3 @@
-//core ideal is app.js file should have connection to database because we need to store
-//data in there only.k
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
@@ -12,14 +10,8 @@ app.use(bodyParser.json());
 
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  //second argument allows to control which domains should actually have access. where browser should allow this.  
-
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-with, Content-Type, Accept, Authorization');
-  //second argument tells which headers incoming requests may have so that they are handled.
-
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE');
-  //controls which http methods may be attatched to http requests by the frontEnd.
-
   next();
 });
 const placesRoutes = require('./routes/places-routes');
