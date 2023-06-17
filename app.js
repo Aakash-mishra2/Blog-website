@@ -34,7 +34,7 @@ app.use((error, req, res, next) => {
 //we want to make sure our backend is connected to database before server is connected
 //if not connected then only start server.s
 mongoose
-  .connect('mongodb+srv://sonu:helloSonu@cluster0.kfazawl.mongodb.net/MERN?retryWrites=true&w=majority')
+  .connect('<DATABASE_URL>')
   .then(() => {
     app.listen(5000, function () {
       console.log("Server started on port 5000");
