@@ -45,7 +45,7 @@ if( url === '/message' && method === 'POST'){
 streams and chunks
 Event driven model node executes passed in functions at a later point in time - this is the pattern when node js executes a function
 
-if (url === '/method' and method = 'POST'){
+if (url === '/method' and method === 'POST'){
 const body = [];
 req.on('data',(chunk) => {
     console.log(chunk);
