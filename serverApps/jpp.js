@@ -6,10 +6,6 @@ app.use((req, res, next) => {
     let body = '';
     req.on('end', () => {
         const userName = body.split('=')[1];
-        //without using line 10 gives Undefined because then I am always setting request body 
-        //element even when there is just a get request which has no attatched data. This end 
-        //event listener on line 7 will fire so request body will always set to object which has 
-        //undefined as the value.
         if (userName) {
             console.log(userName);
             req.body = { name: userName };
@@ -21,6 +17,12 @@ app.use((req, res, next) => {
         body += chunk;
     });
 });
+
+/*
+syntax errors : typos, while coding etc.
+Runtime errors: miss return on end, write method, not typos or brackets
+Logical errors: App not working the way it should, use debugger for it. debugger always starts debugging from app.js
+*/
 
 app.use((req, res, next) => {
     if (req.body) {
